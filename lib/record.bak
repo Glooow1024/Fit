@@ -1,0 +1,102 @@
+import 'dart:async';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
+
+class Action {
+  final String actionName;
+  List<int> weights = [0, 0, 0, 0];
+  List<int> counts = [0, 0, 0, 0];
+
+  Action({required this.actionName});
+}
+
+class Diary {
+  final DateTime today = DateTime.now();
+  late int muscles;
+  List<Action> actionList;
+
+  Diary({required this.actionList});
+
+  // TODO: change the data structure
+  Map<String, dynamic> toMap() {
+    var date = today.toString().substring(0, 10);
+    date = date.replaceAll(new RegExp(r'[^0-9]'), '');
+    return {
+      'date': int.parse(date),
+      'weekday': today.weekday, // int, mon=1, sun=7
+      'time': today.toString(),
+      'muscles': 0,
+      'action': 0,
+    };
+  }
+}
+
+class DatabaseHelper {
+  static final _dbName = 'training_record.db';
+  static final _dbVersion = 1;
+  static final _tableName = 'training';
+
+  static final date = 'date';
+  static final weekday = 'weekday';
+  static final time = 'time';
+  static final actionList = 'action list';
+
+  DatabaseHelper.internal();
+  static final DatabaseHelper _instance = new DatabaseHelper.internal();
+  factory DatabaseHelper() => _instance;
+  static Database? _database;
+
+  Future<Database> get database async => _database ??= await initDB();
+
+  Future<Database> initDB() async {
+    return await openDatabase(
+      join(await getDatabasesPath(), _dbName),
+      version: _dbVersion,
+      onCreate: _onCreate,
+    );
+  }
+
+  Future _onCreate(Database db, int version) {
+    return db.execute('''
+        CREATE TABLE $_tableName (
+        $date INTEGER PRIMARY KEY, 
+        $weekday INTEGER, 
+        $time TEXT, 
+        $actionList BLOB)''');
+  }
+
+  Future<int> insertRecord(Diary diary) async {
+    Database dbClient = await database;
+    var result = await dbClient.insert(
+      _tableName,
+      diary.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    return result;
+  }
+
+  Future<int> updateRecord(Diary diary) async {
+    Database dbClient = await database;
+    var row = diary.toMap();
+    var result = await dbClient
+        .update(_tableName, row, where: '$date = ?', whereArgs: [row[date]]);
+    return result;
+  }
+
+  Future<int> deleteRecord(int today) async {
+    Database dbClient = await database;
+    var result = await dbClient
+        .delete(_tableName, where: '$date = ?', whereArgs: [today]);
+    return result;
+  }
+
+  Future<List<Map<String, dynamic>>> queryAll() async {
+    Database dbClient = await database;
+    return await dbClient.query(_tableName);
+  }
+
+  Future close() async {
+    var dbClient = await database;
+    return dbClient.close();
+  }
+}
