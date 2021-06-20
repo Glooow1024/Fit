@@ -2,6 +2,39 @@ import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'dart:collection';
+import 'package:flutter/material.dart';
+
+class RecordItem {
+  int idx = 0;
+  int id = 0;
+  List<int> weights = [0, 0, 0, 0];
+  List<int> counts = [0, 0, 0, 0];
+  RecordItem(this.idx, this.id, this.weights, this.counts);
+}
+
+class AllRecordItemModel extends ChangeNotifier {
+  final List<RecordItem> _records = [];
+  //访问数据，禁止改变记录数据
+  UnmodifiableListView<RecordItem> get records =>
+      UnmodifiableListView(_records);
+  //添加or更新记录数据
+  void add(RecordItem item) {
+    int a = -1;
+    _records.forEach((element) {
+      //检测是否之前添加过该动作
+      if (element.idx == item.idx) {
+        a = _records.indexOf(element);
+        _records.replaceRange(a, a + 1, [item]);
+      }
+    });
+    if (a == -1) {
+      _records.add(item);
+    }
+    notifyListeners();
+  }
+}
+
 class Action {
   final DateTime today = DateTime.now();
   final String actionName;

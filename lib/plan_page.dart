@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import 'record.dart';
 
 class PlanPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    AllRecordItemModel model = Provider.of<AllRecordItemModel>(context);
     return Column(
       children: <Widget>[
         Expanded(
@@ -46,7 +50,12 @@ class PlanPage extends StatelessWidget {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   onPressed: () {
-                    print("test");
+                    print("save!!!!");
+                    print(model);
+                    print(model.records[0].idx);
+                    print(model.records[0].id);
+                    print(model.records[0].weights);
+                    print(model.records[0].counts);
                   }),
             ),
           ],
@@ -79,12 +88,12 @@ class AllActionItem extends StatelessWidget {
               ),
             ),
           ),
-          ActionItem("平板哑铃卧推"),
-          ActionItem("上斜哑铃卧推"),
-          ActionItem("平板哑铃卧推"),
-          ActionItem("上斜哑铃卧推"),
-          ActionItem("平板哑铃卧推"),
-          ActionItem("上斜哑铃卧推"),
+          ActionItem(0, 100), //"平板哑铃卧推"
+          ActionItem(1, 101), //"上斜哑铃卧推"
+          ActionItem(2, 102), //"平板哑铃卧推"
+          ActionItem(3, 103), //"上斜哑铃卧推"
+          ActionItem(4, 104), //"平板哑铃卧推"
+          ActionItem(5, 105), //"上斜哑铃卧推"
         ],
       ),
     );
@@ -93,11 +102,13 @@ class AllActionItem extends StatelessWidget {
 
 // 单条动作项目
 class ActionItem extends StatelessWidget {
-  final String actionName;
-  ActionItem(this.actionName);
+  final int actionIdx;
+  final int actionId;
+  ActionItem(this.actionIdx, this.actionId);
 
   @override
   Widget build(BuildContext context) {
+    String actionName = ""; //TODO:
     return Container(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -109,7 +120,7 @@ class ActionItem extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
             alignment: Alignment.centerLeft,
             child: Text(
-              this.actionName,
+              actionName,
               textAlign: TextAlign.left,
               style: TextStyle(
                 fontSize: 18,
@@ -118,7 +129,7 @@ class ActionItem extends StatelessWidget {
               ),
             ),
           ),
-          DataRecord(),
+          DataRecord(actionIdx: this.actionIdx, actionId: this.actionId),
         ],
       ),
     );
@@ -127,34 +138,32 @@ class ActionItem extends StatelessWidget {
 
 // 重量与次数记录
 class DataRecord extends StatefulWidget {
+  final int actionIdx;
+  final int actionId;
+  DataRecord({required this.actionIdx, required this.actionId});
+
   @override
-  _DataRecordState createState() => _DataRecordState();
+  _DataRecordState createState() =>
+      _DataRecordState(this.actionIdx, this.actionId);
 }
 
 class _DataRecordState extends State<DataRecord> {
   // 初始值
-  final int _actionName;
-  _DataRecordState(this._actionName);
-  List _weights = [
-    TextEditingController(),
-    TextEditingController(),
-    TextEditingController(),
-    TextEditingController(),
-  ];
-  List _counts = [
-    TextEditingController(),
-    TextEditingController(),
-    TextEditingController(),
-    TextEditingController(),
-  ];
+  final int actionIdx;
+  final int actionId;
+  late RecordItem record;
+  _DataRecordState(this.actionIdx, this.actionId);
 
   @override
   void initState() {
     super.initState();
+    record = RecordItem(actionIdx, actionId, [0, 0, 0, 0], [0, 0, 0, 0]);
   }
 
   @override
   Widget build(BuildContext context) {
+    AllRecordItemModel model =
+        Provider.of<AllRecordItemModel>(context, listen: false);
     return Column(
       children: <Widget>[
         Row(
@@ -180,7 +189,7 @@ class _DataRecordState extends State<DataRecord> {
                   FilteringTextInputFormatter.allow(RegExp("[0-9]")),
                 ],
                 decoration: InputDecoration(
-                  hintText: '10',
+                  hintText: '0',
                   /*border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(5.0),
                     borderSide: BorderSide(color: Color(0xff555555)),
@@ -195,7 +204,15 @@ class _DataRecordState extends State<DataRecord> {
                   ),*/
                 ),
                 style: TextStyle(fontSize: 20),
-                controller: _weights[0],
+                onChanged: (value) {
+                  record.weights[0] = int.parse(value);
+                  model.add(record);
+                },
+                /*onChanged: (value) {
+                  setState(() {
+                    _weights[0] = int.parse(value);
+                  });
+                },*/
               ),
             ),
             Container(
@@ -210,10 +227,13 @@ class _DataRecordState extends State<DataRecord> {
                   FilteringTextInputFormatter.allow(RegExp("[0-9]")),
                 ],
                 decoration: InputDecoration(
-                  hintText: '10',
+                  hintText: '0',
                 ),
                 style: TextStyle(fontSize: 20),
-                controller: _weights[1],
+                onChanged: (value) {
+                  record.weights[1] = int.parse(value);
+                  model.add(record);
+                },
               ),
             ),
             Container(
@@ -228,10 +248,13 @@ class _DataRecordState extends State<DataRecord> {
                   FilteringTextInputFormatter.allow(RegExp("[0-9]")),
                 ],
                 decoration: InputDecoration(
-                  hintText: '10',
+                  hintText: '0',
                 ),
                 style: TextStyle(fontSize: 20),
-                controller: _weights[2],
+                onChanged: (value) {
+                  record.weights[2] = int.parse(value);
+                  model.add(record);
+                },
               ),
             ),
             Container(
@@ -246,10 +269,13 @@ class _DataRecordState extends State<DataRecord> {
                   FilteringTextInputFormatter.allow(RegExp("[0-9]")),
                 ],
                 decoration: InputDecoration(
-                  hintText: '10',
+                  hintText: '0',
                 ),
                 style: TextStyle(fontSize: 20),
-                controller: _weights[3],
+                onChanged: (value) {
+                  record.weights[3] = int.parse(value);
+                  model.add(record);
+                },
               ),
             ),
           ],
@@ -276,9 +302,12 @@ class _DataRecordState extends State<DataRecord> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp("[0-9]")),
                 ],
-                decoration: InputDecoration(hintText: '10'),
+                decoration: InputDecoration(hintText: '0'),
                 style: TextStyle(fontSize: 20),
-                controller: _counts[0],
+                onChanged: (value) {
+                  record.counts[0] = int.parse(value);
+                  model.add(record);
+                },
               ),
             ),
             Container(
@@ -292,11 +321,12 @@ class _DataRecordState extends State<DataRecord> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp("[0-9]")),
                 ],
-                decoration: InputDecoration(
-                  hintText: '10',
-                ),
+                decoration: InputDecoration(hintText: '0'),
                 style: TextStyle(fontSize: 20),
-                controller: _counts[1],
+                onChanged: (value) {
+                  record.counts[1] = int.parse(value);
+                  model.add(record);
+                },
               ),
             ),
             Container(
@@ -310,11 +340,12 @@ class _DataRecordState extends State<DataRecord> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp("[0-9]")),
                 ],
-                decoration: InputDecoration(
-                  hintText: '10',
-                ),
+                decoration: InputDecoration(hintText: '0'),
                 style: TextStyle(fontSize: 20),
-                controller: _counts[2],
+                onChanged: (value) {
+                  record.counts[2] = int.parse(value);
+                  model.add(record);
+                },
               ),
             ),
             Container(
@@ -328,11 +359,12 @@ class _DataRecordState extends State<DataRecord> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp("[0-9]")),
                 ],
-                decoration: InputDecoration(
-                  hintText: '10',
-                ),
+                decoration: InputDecoration(hintText: '0'),
                 style: TextStyle(fontSize: 20),
-                controller: _counts[3],
+                onChanged: (value) {
+                  record.counts[3] = int.parse(value);
+                  model.add(record);
+                },
               ),
             ),
           ],

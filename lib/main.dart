@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'plan_page.dart';
 import 'rcd_page.dart';
 import 'repo_page.dart';
+import 'record.dart';
 
 /*入口函数*/
 void main() => runApp(MyApp());
@@ -9,12 +11,17 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '我要变成大帅哥',
-      theme: ThemeData(
-        primaryColor: Colors.blue,
-      ),
-      home: IndexPage(),
+    return ChangeNotifierProvider(
+      create: (_) => AllRecordItemModel(),
+      builder: (context, child) {
+        return MaterialApp(
+          title: '我要变成大帅哥',
+          theme: ThemeData(
+            primaryColor: Colors.blue,
+          ),
+          home: IndexPage(),
+        );
+      },
     );
   }
 }
